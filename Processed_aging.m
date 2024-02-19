@@ -141,6 +141,69 @@ end
 
 
 
+for i = 1:length(alltxtfiles)
+    currentFile = alltxtfiles{i};
+    [~, fileName, fileExt] = fileparts(currentFile);
+
+    % 언더스코어(_)로 파일 이름을 분리
+    fileName = strrep(fileName, '_DC', ''); % 파일 이름에서 '_DC' 제거
+    parts = strsplit(fileName, '_');
+
+    if length(parts) >= 2
+        numPart = str2double(parts{end}); 
+
+        for idx = 1:length(sixthColumnData)
+
+                % sheetHeaders{5}와 numPart가 일치하는 경우
+                if any(sixthColumnData == numPart)
+                    % numPart와 일치하는 인덱스 찾기
+                    numidx = find(sixthColumnData == numPart);
+
+                    % sheetHeaders{2}와 sheetHeaders{3}에 폴더 분배
+                    for k = 1:length(numidx)
+                        idxToUse = numidx(k);
+                        firstValue = data.(sheetHeaders{1}){idxToUse};
+                        secondValue = data.(sheetHeaders{2}){idxToUse};
+                        thirdValue = data.(sheetHeaders{3}){idxToUse};
+                        fourthValue = data.(sheetHeaders{4}){idxToUse};
+                        fifthValue = data.(sheetHeaders{5})(idxToUse);
+                        sixthValue = data.(sheetHeaders{6})(idxToUse);
+                        seventhValue = data.(sheetHeaders{7}){idxToUse};
+
+
+                        folderPath1 = fullfile(save_path, firstValue);
+                        folderPath2 = fullfile(folderPath1, seventhValue);
+                        folderPath3 = fullfile(folderPath2, secondValue);
+                        folderPath4 = fullfile(folderPath3, thirdValue);
+
+
+                     % 새로운 파일 이름 구성
+                    if floor(fifthValue) == fifthValue && floor(sixthValue) == sixthValue
+                     % 정수인 경우
+                     newFileName = sprintf('%s_%s_%s_%s_%d_%d_%s%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue,  fileExt);
+                    else
+                     % 소수점이 포함된 경우
+                     newFileName = sprintf('%s_%s_%s_%s_%.2f_%.2f_%s%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue,  fileExt);
+                    end
+
+                    if ~exist(folderPath4, 'dir')
+                            mkdir(folderPath4);
+
+                    end
+
+                        % 새 파일 경로 생성
+                        newFilePath = fullfile(folderPath4, newFileName);
+
+                        % 원본 파일을 새 경로로 복사
+                        copyfile(currentFile, newFilePath);
+
+                    end
+                end
+            end
+        end
+end
+
+
 % % 디렉토리 경로 설정
 % dirPath = {
 %     '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL_Data2/HNE_AgingDOE_processed/HNE_FCC/RPT1/25C/4CPD 1C (25-42)',
