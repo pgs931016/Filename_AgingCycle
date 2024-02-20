@@ -1,4 +1,3 @@
-% 1번 save_path 설정
 clc; 
 clear; 
 close all;
@@ -6,27 +5,28 @@ close all;
 slash = filesep;
 
 % load xlxs
-Data_path = '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL-Data/Data/Hyundai_dataset/AgingDOE_All/AgingDOE_cycle1';
+Data_path = '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL_Data2/Raw';
+
+
 
 % Data_path를 슬래시 기준으로 분리
 splitPath = split(Data_path, filesep);
 
 % "Data"가 포함된 인덱스를 찾음
-index = find(strcmp('Data', splitPath), 1);
+index1 = find(strcmp('Raw', splitPath), 1);
 
 % "Data"를 "Processed_Data"로 변경 (요구사항에 따라)
-splitPath{index} = 'Exercise';
+splitPath{index1} = 'HNE_AgingDOE_Raw'  ;
 
 % index까지의 경로만을 사용하여 save_path 설정
-savePathComponents = splitPath(1:index);
+savePathComponents = splitPath(1:index1);
 
 % save_path를 재구성
 save_path = strjoin(savePathComponents, filesep);
 
 
-
 % 엑셀 Data load
-xlsfile = '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL-Data/Data/Hyundai_dataset/File_Naming.xlsx';
+xlsfile = '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL_Data2/HNE_Folder_Automation.xlsx';
 
 if exist(xlsfile, 'file') == 2
     disp('File exists.');
@@ -34,18 +34,23 @@ else
     disp('File does not exist.');
 end
 
+
 % 각 시트를 읽어오기 위해 엑셀 파일의 정보를 가져옵니다.
-[sheetInfo, sheetNames] = xlsfinfo(xlsfile);
+sheetNames = sheetnames(xlsfile);
 disp(class(sheetNames));  % sheetNames의 데이터 타입 출력
 
+
+
+
 % 찾고자 하는 문자열
-desiredString = 'RPT1';
+desiredString = 'Aging1';
 
 
 % 입력한 문자열과 일치하는 시트를 찾아서 데이터를 적용
 for i = 1:length(sheetNames)
     % 엑셀 파일에서 데이터를 읽어와 테이블로 변환
-    data = readtable(xlsfile, 'Sheet', sheetNames{i});
+    data = readtable(xlsfile, 'Sheet', sheetNames(i));
+
 
     % 시트 헤더 가져오기
     sheetHeaders = data.Properties.VariableNames;
@@ -87,25 +92,24 @@ for i = 1:length(sheetNames)
         uniqueSixthValues = unique(sixthColumnData);
 
 
-
         % 폴더 생성
         for i = 1:length(uniqueFirstValues)
             folderPath1 = fullfile(save_path, uniqueFirstValues{i});
-            % if ~exist(folderPath1, 'dir')
-            %     mkdir(folderPath1);
-            % end
+            if ~exist(folderPath1, 'dir')
+                mkdir(folderPath1);
+            end
 
             for j = 1:length(uniqueSecondValues)
                 folderPath2 = fullfile(folderPath1, uniqueSecondValues{j});
-                % if ~exist(folderPath2, 'dir')
-                %     mkdir(folderPath2);
-                % end
+                if ~exist(folderPath2, 'dir')
+                    mkdir(folderPath2);
+                end
 
                 for k = 1:length(uniqueThirdValues)
                     folderPath3 = fullfile(folderPath2, uniqueThirdValues{k});
-                    % if ~exist(folderPath3, 'dir')
-                    %     mkdir(folderPath3);
-                    % end
+                    if ~exist(folderPath3, 'dir')
+                        mkdir(folderPath3);
+                    end
                 end
             end
         end
@@ -127,13 +131,14 @@ for i = 1:length(subfolders)
         % 일치하는 폴더 내의 .txt 파일 찾기
         targetfolderPath = fullfile(Data_path, subfolders(i).name);
         txtfiles = dir(fullfile(targetfolderPath, '*.txt'));
-        
+
         % 각 파일의 전체 경로를 alltxtfiles에 추가
         for j = 1:length(txtfiles)
             alltxtfiles{end+1} = fullfile(targetfolderPath, txtfiles(j).name);
         end
     end
 end
+
 
 
 for i = 1:length(alltxtfiles)
@@ -145,14 +150,14 @@ for i = 1:length(alltxtfiles)
     parts = strsplit(fileName, '_');
 
     if length(parts) >= 2
-        numPart = str2double(parts{end});
+        numPart = str2double(parts{end}); 
 
-        for idx = 1:length(fifthColumnData)
+        for idx = 1:length(sixthColumnData)
 
                 % sheetHeaders{5}와 numPart가 일치하는 경우
-                if any(fifthColumnData == numPart)
+                if any(sixthColumnData == numPart)
                     % numPart와 일치하는 인덱스 찾기
-                    numidx = find(fifthColumnData == numPart);
+                    numidx = find(sixthColumnData == numPart);
 
                     % sheetHeaders{2}와 sheetHeaders{3}에 폴더 분배
                     for k = 1:length(numidx)
@@ -163,27 +168,36 @@ for i = 1:length(alltxtfiles)
                         fourthValue = data.(sheetHeaders{4}){idxToUse};
                         fifthValue = data.(sheetHeaders{5})(idxToUse);
                         sixthValue = data.(sheetHeaders{6})(idxToUse);
+                        seventhValue = data.(sheetHeaders{7}){idxToUse};
 
 
                         folderPath1 = fullfile(save_path, firstValue);
-                        folderPath2 = fullfile(folderPath1, secondValue);
-                        folderPath3 = fullfile(folderPath2, thirdValue);
-                    % 새로운 파일 이름 구성
-                    newFileName = sprintf('%s_%s_%s_%s_%d_%d%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, fileExt);
-                    
-                    if ~exist(folderPath3, 'dir')
-                            mkdir(folderPath3);
-                    
+                        folderPath2 = fullfile(folderPath1, seventhValue);
+                        folderPath3 = fullfile(folderPath2, secondValue);
+                        folderPath4 = fullfile(folderPath3, thirdValue);
+
+
+                     % 새로운 파일 이름 구성
+                    if floor(fifthValue) == fifthValue && floor(sixthValue) == sixthValue
+                     % 정수인 경우
+                     newFileName = sprintf('%s_%s_%s_%s_%d_%d_%s%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue,  fileExt);
+                    else
+                     % 소수점이 포함된 경우
+                     newFileName = sprintf('%s_%s_%s_%s_%.2f_%.2f_%s%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue,  fileExt);
                     end
-                 
+
+                    if ~exist(folderPath4, 'dir')
+                            mkdir(folderPath4);
+
+                    end
+
                         % 새 파일 경로 생성
-                        newFilePath = fullfile(folderPath3, newFileName);
+                        newFilePath = fullfile(folderPath4, newFileName);
 
                         % 원본 파일을 새 경로로 복사
                         copyfile(currentFile, newFilePath);
-                        
+
                     end
                 end
             end
         end
-end
