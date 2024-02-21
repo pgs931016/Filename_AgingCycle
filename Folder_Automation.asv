@@ -7,22 +7,25 @@ slash = filesep;
 % load xlxs
 Data_path = '/Users/g.park/Library/CloudStorage/GoogleDrive-gspark@kentech.ac.kr/공유 드라이브/BSL_Data2/Raw';
 
-
-
 % Data_path를 슬래시 기준으로 분리
 splitPath = split(Data_path, filesep);
 
 % "Data"가 포함된 인덱스를 찾음
-index1 = find(strcmp('Raw', splitPath), 1);
+index1 = find(strcmp('Raw', splitPath), 1); % 'Raw' 대신 'Raw' 사용
 
-% "Data"를 "Processed_Data"로 변경 (요구사항에 따라)
-splitPath{index1} = 'HNE_AgingDOE_Raw'  ;
+% "Data"를 "Processed_Data"로 변경 
+if ~isempty(index1)
+    splitPath{index1} = 'HNE_AgingDOE_Processed';
+else
+    disp('The specified path segment ''Raw'' was not found.');
+end
 
 % index까지의 경로만을 사용하여 save_path 설정
 savePathComponents = splitPath(1:index1);
 
 % save_path를 재구성
 save_path = strjoin(savePathComponents, filesep);
+
 
 
 % 엑셀 Data load
@@ -43,7 +46,7 @@ disp(class(sheetNames));  % sheetNames의 데이터 타입 출력
 
 
 % 찾고자 하는 문자열
-desiredString = 'Aging1';
+desiredString = 'RPT1';
 
 
 % 입력한 문자열과 일치하는 시트를 찾아서 데이터를 적용
@@ -95,21 +98,21 @@ for i = 1:length(sheetNames)
         % 폴더 생성
         for i = 1:length(uniqueFirstValues)
             folderPath1 = fullfile(save_path, uniqueFirstValues{i});
-            if ~exist(folderPath1, 'dir')
-                mkdir(folderPath1);
-            end
+            % if ~exist(folderPath1, 'dir')
+            %     mkdir(folderPath1);
+            % end
 
             for j = 1:length(uniqueSecondValues)
                 folderPath2 = fullfile(folderPath1, uniqueSecondValues{j});
-                if ~exist(folderPath2, 'dir')
-                    mkdir(folderPath2);
-                end
+                % if ~exist(folderPath2, 'dir')
+                %     mkdir(folderPath2);
+                % end
 
                 for k = 1:length(uniqueThirdValues)
                     folderPath3 = fullfile(folderPath2, uniqueThirdValues{k});
-                    if ~exist(folderPath3, 'dir')
-                        mkdir(folderPath3);
-                    end
+                    % if ~exist(folderPath3, 'dir')
+                    %     mkdir(folderPath3);
+                    % end
                 end
             end
         end
@@ -172,9 +175,9 @@ for i = 1:length(alltxtfiles)
 
 
                         folderPath1 = fullfile(save_path, firstValue);
-                        folderPath2 = fullfile(folderPath1, seventhValue);
-                        folderPath3 = fullfile(folderPath2, secondValue);
-                        folderPath4 = fullfile(folderPath3, thirdValue);
+                        folderPath2 = fullfile(folderPath1, secondValue);
+                        folderPath3 = fullfile(folderPath2, thirdValue);
+                        % folderPath4 = fullfile(folderPath3, thirdValue);
 
 
                      % 새로운 파일 이름 구성
@@ -186,13 +189,13 @@ for i = 1:length(alltxtfiles)
                      newFileName = sprintf('%s_%s_%s_%s_%.2f_%.2f_%s%s', firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue,  fileExt);
                     end
 
-                    if ~exist(folderPath4, 'dir')
-                            mkdir(folderPath4);
+                    if ~exist(folderPath3, 'dir')
+                            mkdir(folderPath3);
 
                     end
 
                         % 새 파일 경로 생성
-                        newFilePath = fullfile(folderPath4, newFileName);
+                        newFilePath = fullfile(folderPath3, newFileName);
 
                         % 원본 파일을 새 경로로 복사
                         copyfile(currentFile, newFilePath);
@@ -201,3 +204,4 @@ for i = 1:length(alltxtfiles)
                 end
             end
         end
+end
